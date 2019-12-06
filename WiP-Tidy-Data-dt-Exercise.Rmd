@@ -109,10 +109,48 @@ library(here)
 wip <- fread(here("data", "WB-WiP.csv"), 
              skip = 4, header = TRUE,
              check.names = TRUE)
+class(wip)
+str(wip)
 ```
 
-# Continue from here...
+# Data Wrangling Aims
 
+##Superfluous columns
+
+```{r}
+wip[, .N, by=.(V65)]
+```
+##Removing Columns
+
+```{r}
+wip[, c("Indicator.Name", "Indicator.Code", "V65"):=NULL]
+
+setnames(wip, c("Country.Name", "Country.Code"), c("Country", "Code"))
+
+head(names(wip))
+
+tail(names(wip))
+```
+
+##Reshape to long format
+
+```{r}
+WP <- melt(wip,id.vars = c("Country", "Code"), measure = patterns("^X"), variable.name = "YearC", value.name = c("pctWiP"), na.rm = TRUE)
+
+melt.data.table(WP)
+
+WP
+```
+
+##Final tweaks to WP
+
+```{r}
+WP[, `:=`(Year=as.numeric(gsub("[^[:digit:].]", "", YearC)), Ratio = (100-pctWiP)/pctWiP)][, YearC:=NULL]
+
+setcolorder(WP, c("Country", "Code", "Year", "pctWiP", "Ratio"))
+
+WP
+```
 
 
 
