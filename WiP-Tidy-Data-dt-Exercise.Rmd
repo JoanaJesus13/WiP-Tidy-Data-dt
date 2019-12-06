@@ -113,14 +113,14 @@ class(wip)
 str(wip)
 ```
 
-# Data Wrangling Aims
+## Data Wrangling Aims
 
-##Superfluous columns
+### Superfluous columns
 
 ```{r}
 wip[, .N, by=.(V65)]
 ```
-##Removing Columns
+### Removing Columns
 
 ```{r}
 wip[, c("Indicator.Name", "Indicator.Code", "V65"):=NULL]
@@ -132,7 +132,7 @@ head(names(wip))
 tail(names(wip))
 ```
 
-##Reshape to long format
+### Reshape to long format
 
 ```{r}
 WP <- melt(wip,id.vars = c("Country", "Code"), measure = patterns("^X"), variable.name = "YearC", value.name = c("pctWiP"), na.rm = TRUE)
@@ -142,7 +142,7 @@ melt.data.table(WP)
 WP
 ```
 
-##Final tweaks to WP
+### Final tweaks to WP
 
 ```{r}
 WP[, `:=`(Year=as.numeric(gsub("[^[:digit:].]", "", YearC)), Ratio = (100-pctWiP)/pctWiP)][, YearC:=NULL]
@@ -152,7 +152,7 @@ setcolorder(WP, c("Country", "Code", "Year", "pctWiP", "Ratio"))
 WP
 ```
 
-# Exploratory analysis
+## Exploratory analysis
 
 ```{r}
 WP[Country %in% "Portugal"]
@@ -171,13 +171,13 @@ WP[Country %in% "Portugal"] %>% ggplot(aes(Year, pctWiP)) + geom_line(colour="pl
 WP[Country %in% c("Portugal", "Sweden", "Spain", "Hungary", "Romania", "Finland", "Germany", "European Union")] %>% ggplot(aes(Year, pctWiP, colour=Country)) + geom_line() + geom_point() + scale_x_continuous(breaks=seq(1990, 2020, 5)) + scale_y_continuous(limits=c(0,50), breaks=seq(0, 50, by=10)) + ggtitle("Women in Parliament: EU Countries") + ylab("% Women in Parliament")
 ```
 
-##Coutries with the highest percentage of women in parliament
+### Coutries with the highest percentage of women in parliament
 
 ```{r}
 WP[order(-pctWiP), head(.SD, 10)]
 ```
 
-##Highest percentage by year
+### Highest percentage by year
 
 ```{r}
 WP[order(Year, -pctWiP), head(.SD, 1), by = Year]
@@ -194,13 +194,13 @@ cWP <- cl[WP, on="Code"]
 cWP
 ```
 
-## Highest percentage by year and continent
+### Highest percentage by year and continent
 
 ```{r}
 cWP[Year %in% c(1990, 2018) & !is.na(Continent)] [order(Year, -pctWiP), head(.SD, 1), by = .(Year, Continent)][order(Continent, Year), .(Continent, Year, Country, pctWiP)]
 ```
 
-##Decline in percentage
+### Decline in percentage
 
 ```{r}
 dWP <- cWP[order(Country, Year), .SD[c(1,.N)], by=Country][, pctDiff := pctWiP - shift(pctWiP), by=Country][pctDiff<0][order(pctDiff)]
